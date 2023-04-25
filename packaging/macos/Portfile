@@ -31,15 +31,18 @@ post-fetch {
     system -W ${worksrcpath} "${git.cmd} submodule update --init --recursive"
 }
 
+depends_build            port:ninja \
+                         port:npm9
+
 depends_lib              port:avahi \
                          port:curl \
                          port:libopus \
-                         port:npm9 \
                          port:pkgconfig
 
 boost.version            1.80
 
-configure.args           -DCMAKE_INSTALL_PREFIX=${prefix} \
+configure.args           -G Ninja \
+                         -DCMAKE_INSTALL_PREFIX=${prefix} \
                          -DSUNSHINE_ASSETS_DIR=etc/sunshine/assets
 
 startupitem.create       yes
@@ -57,6 +60,16 @@ platform darwin {
 
 pre-build {
     system -W ${worksrcpath} "npm install"
+}
+
+# override default build phase, normally "make"
+build {
+    ninja
+}
+
+# override default destroot phase, normally "make install DESTDIR=${destroot}"
+destroot {
+    ninja install
 }
 
 notes-append "Run @PROJECT_NAME@ by executing 'sunshine <path to user config>', e.g. 'sunshine ~/sunshine.conf' "
